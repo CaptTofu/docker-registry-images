@@ -1,0 +1,43 @@
+---
+
+# ignore_errors because not fixed in 1.9 and won't be fixed
+- name: pull skydns images
+  become: yes
+  docker_pull:
+    repo: "gcr.io/google_containers/{{ item.key }}"
+    tag: "{{ item.value }}"
+  ignore_errors: yes
+  with_dict: "{{ dns_images }}"
+  when: dns_images is defined
+
+- name: tag skydns images to local repository
+  become: yes
+  shell: "docker tag -f gcr.io/google_containers/{{ item.key }}:{{ item.value }} {{ registry_path }}/google_containers/{{ item.key }}:{{ item.value }}"
+  with_dict: "{{ dns_images }}"
+  when: dns_images is defined
+
+- name: push skydns images to local repository
+  become: yes
+  shell: "docker push {{ registry_path }}/google_containers/{{ item.key }}:{{ item.value }}"
+  with_dict: "{{ dns_images }}"
+  when: dns_images is defined
+
+- name: pull user-defined images
+  become: yes
+  docker_pull:
+    repo: "{{ item.key }}"
+    tag: "{{ item.value }}"
+  with_dict: "{{ optional_images }}"
+  when: optional_images is defined
+
+- name: tag user-defined images to local repository
+  become: yes
+  shell: "docker tag -f {{ item.key }}:{{ item.value }} {{ registry_path }}/{{ item.key }}:{{ item.value }}"
+  with_dict: "{{ optional_images }}"
+  when: optional_images is defined
+
+- name: push user-defined images to local repository
+  become: yes
+  shell: "docker push {{ registry_path }}/{{ item.key }}:{{ item.value }}"
+  with_dict: "{{ optional_images }}"
+  when: optional_images is defined

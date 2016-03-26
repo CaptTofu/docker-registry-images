@@ -1,0 +1,10 @@
+---
+
+- name: debug registry path
+  debug: msg="{{ registry_path }}"
+  tags: 
+  - registry-debug
+
+- name: push images
+  include: push_images.yml
+  when: inventory_hostname == registry_host or multiple_registry_hosts == true
